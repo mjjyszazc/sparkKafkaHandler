@@ -1,0 +1,36 @@
+.;%JAVA_HOME%\lib\dt.jar;%JAVA_HOME%lib\tools.jar;.;%SCALA_HOME%\bin;%SCALA_HOME%\lib\dt.jar;%SCALA_HOME%\lib\tools.jar.;
+
+spark-submit --master local[2] --class Action --executor-memory 900m --total-executor-cores 2 --driver-memory 1200m --conf spark.streaming.blockInterval=500 --conf spark.streaming.backpressure.enable=true --conf spark.task.maxFailures=1 --files /opt/Application/kafkaSparkDemo/application.properties /opt/Application/kafkaSparkDemo/sparkKafka.jar 1>/opt/Application/kafkaSparkDemo/log_sparkkafka 2>/opt/Application/kafkaSparkDemo/log_sparkkafka2  &
+
+
+
+
+# 本地模式的配置文件不需要--file 参数  会自动在对应的路径搜索加载
+spark-submit --master local[2] --class Action --executor-memory 900m --total-executor-cores 2 --driver-memory 1200m --conf spark.streaming.blockInterval=500 --conf spark.streaming.backpressure.enable=true --conf spark.task.maxFailures=1 /opt/Application/kafkaSparkDemo/sparkKafka.jar
+
+
+# yarn client 模式
+spark-submit --class Action --master yarn --deploy-mode  client --executor-memory 700m --total-executor-cores 1 --driver-memory 900m --files /opt/Application/kafkaSparkDemo/application.properties /opt/Application/kafkaSparkDemo/sparkKafka.jar
+
+
+# yarn cluster模式（适合生产环境 driver运行在nodeManager 的applicationMaster中  client 模式的driver运行在客户端上 客户端与executor不在同一局域网 他们之间的通信会很慢）
+spark-submit --class Action --master yarn --deploy-mode  cluster --executor-memory 700m --total-executor-cores 1 --driver-memory 900m --files /opt/Application/kafkaSparkDemo/application.properties /opt/Application/kafkaSparkDemo/sparkKafka.jar 1>hdfs://user/hadoop/ns1/data/log_redisspark 2>hdfs://user/hadoop/ns1/sparkout/log_redisspark2  &
+
+1 表示标准输出 2 表示标准错误 & 表示在后台运行
+
+优化
+/*actWindow.transformWith(delWindow,(acRdd:RDD[(String,String)],delRdd:RDD[(String,String)])=>{
+      acRdd.join(delRdd,acRdd.partitioner.get)
+    })*/
+	
+	
+打印offset信息	
+	/*val o:OffsetRange = offsetRangs(TaskContext.get.partitionId())
+      println("topic:"+o.topic+" partition:"+o.partition+" offset:"+o.fromOffset+" --"+o.untilOffset)*/
+	  
+	  
+	  
+	  //reduceByKeyAndWindow去重
+    val resultStream = joinedStream.reduceByKeyAndWindow((record1,record2)=> record1,
+      windowDuration = Durations.seconds(properties.getProperty("spark.dewindow.seconds").toInt*2)
+    ,slideDuration = Durations.seconds(properties.getProperty("spark.dewindow.seconds").toInt))

@@ -1,8 +1,4 @@
-.;%JAVA_HOME%\lib\dt.jar;%JAVA_HOME%lib\tools.jar;.;%SCALA_HOME%\bin;%SCALA_HOME%\lib\dt.jar;%SCALA_HOME%\lib\tools.jar.;
-
 spark-submit --master local[2] --class Action --executor-memory 900m --total-executor-cores 2 --driver-memory 1200m --conf spark.streaming.blockInterval=500 --conf spark.streaming.backpressure.enable=true --conf spark.task.maxFailures=1 --files /opt/Application/kafkaSparkDemo/application.properties /opt/Application/kafkaSparkDemo/sparkKafka.jar 1>/opt/Application/kafkaSparkDemo/log_sparkkafka 2>/opt/Application/kafkaSparkDemo/log_sparkkafka2  &
-
-
 
 
 # 本地模式的配置文件不需要--file 参数  会自动在对应的路径搜索加载
@@ -28,8 +24,7 @@ spark-submit --class Action --master yarn --deploy-mode  cluster --executor-memo
 	/*val o:OffsetRange = offsetRangs(TaskContext.get.partitionId())
       println("topic:"+o.topic+" partition:"+o.partition+" offset:"+o.fromOffset+" --"+o.untilOffset)*/
 	  
-	  
-	  
+	  	  
 	  //reduceByKeyAndWindow去重
     val resultStream = joinedStream.reduceByKeyAndWindow((record1,record2)=> record1,
       windowDuration = Durations.seconds(properties.getProperty("spark.dewindow.seconds").toInt*2)
